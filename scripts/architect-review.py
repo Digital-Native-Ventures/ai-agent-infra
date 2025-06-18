@@ -1,11 +1,12 @@
-#\!/usr/bin/env python3
-"""Approve or request changes on a PR using GPT-o3."""
-import os, subprocess, openai, sys, pathlib, textwrap, json
+#!/usr/bin/env python3
+"""Approve or request changes on a PR using GPT-4o."""
+import os, subprocess, sys, pathlib, textwrap, json
+from openai import OpenAI
 
 pr_diff = subprocess.check_output(["gh", "pr", "diff", "--color=never"]).decode()
 task_row = os.environ.get("TASK_ROW", "")
-openai.api_key = os.environ["OPENAI_API_KEY"]
-model = os.getenv("ARCHITECT_MODEL", "gpt-o3")
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+model = os.getenv("ARCHITECT_MODEL", "gpt-4o")
 
 prompt = textwrap.dedent(f"""
 You are Architect-Reviewer. Original task row:
@@ -19,10 +20,10 @@ DIFF:
 {pr_diff}
 """)
 
-resp = openai.chat.completions.create(
-model=model,
-messages=[{"role":"user","content":prompt}],
-max_tokens=256,
+resp = client.chat.completions.create(
+    model=model,
+    messages=[{"role":"user","content":prompt}],
+    max_tokens=256,
 )
 result = json.loads(resp.choices[0].message.content)
 print(result)
