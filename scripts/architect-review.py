@@ -3,7 +3,12 @@
 import os, subprocess, sys, pathlib, textwrap, json
 from openai import OpenAI
 
-pr_diff = subprocess.check_output(["gh", "pr", "diff", "--color=never"]).decode()
+pr_number = os.environ.get("GITHUB_REF_NAME", "").replace("refs/pull/", "").split("/")[0]
+if not pr_number:
+    # fallback: get PR number from branch name or github context
+    pr_number = subprocess.check_output(["gh", "pr", "list", "--head", os.environ.get("GITHUB_HEAD_REF", ""), "--json", "number", "--jq", ".[0].number"]).decode().strip()
+
+pr_diff = subprocess.check_output(["gh", "pr", "diff", pr_number, "--color=never"]).decode()
 task_row = os.environ.get("TASK_ROW", "")
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 model = os.getenv("ARCHITECT_MODEL", "gpt-4o")
@@ -28,8 +33,8 @@ resp = client.chat.completions.create(
 result = json.loads(resp.choices[0].message.content)
 print(result)
 if result.get("approve"):
-    subprocess.run(["gh", "pr", "review", "--approve", "--body", result["comment"]], check=True)
+    subprocess.run(["gh", "pr", "review", pr_number, "--approve", "--body", result["comment"]], check=True)
     if os.getenv("AUTO_MERGE") == "true":
-        subprocess.run(["gh", "pr", "merge", "--auto", "--squash"], check=True)
+        subprocess.run(["gh", "pr", "merge", pr_number, "--auto", "--squash"], check=True)
 else:
-    subprocess.run(["gh", "pr", "review", "--request-changes", "--body", result["comment"]], check=True)
+    subprocess.run(["gh", "pr", "review", pr_number, "--request-changes", "--body", result["comment"]], check=True)
