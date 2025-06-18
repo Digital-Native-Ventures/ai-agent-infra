@@ -1,4 +1,4 @@
-#\!/usr/bin/env python3
+#!/usr/bin/env python3
 """Mark a task row as completed ([x]) given its numeric ID."""
 import re, pathlib, sys
 
@@ -7,7 +7,7 @@ queue   = pathlib.Path("tasks/task-queue.md")
 md      = queue.read_text()
 
 new_md, n = re.subn(
-    rf"(\ < /dev/null |  \[) (\]) \| *{task_id} ",
+    rf"(\| \[) (\]) \| *{task_id} ",
     lambda m: m.group(0).replace("[ ]", "[x]"),
     md, count=1)
 
