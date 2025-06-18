@@ -1,11 +1,11 @@
-#\!/usr/bin/env python3
+#!/usr/bin/env python3
 import re, pathlib, sys
 
 PLAN = pathlib.Path("planning/architect-plan.md")
 QUEUE = pathlib.Path("tasks/task-queue.md")
 
 md = PLAN.read_text()
-m  = re.search(r"\ < /dev/null |  Status \| ID .*?\n(\|.*\n)+", md)
+m  = re.search(r"\| Status \| ID .*?\n(\|.*\n)+", md)
 if not m:
     raise SystemExit("Task table not found in plan")
 
