@@ -7,8 +7,8 @@ queue   = pathlib.Path("tasks/task-queue.md")
 md      = queue.read_text()
 
 new_md, n = re.subn(
-    rf"(\| \[) (\]) \| *{task_id} ",
-    lambda m: m.group(0).replace("[ ]", "[x]"),
+    rf"(\| \[) (\]) ( *\| *{task_id} )",
+    r"\1x]\3",
     md, count=1)
 
 if n:
