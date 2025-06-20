@@ -1,5 +1,10 @@
 #\!/usr/bin/env python3
-import os, sys, requests, json
+import json
+import os
+import sys
+
+import requests
+
 check, owner, repo, branch = sys.argv[1:]
 token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
 url = f"https://api.github.com/repos/{owner}/{repo}/branches/{branch}/protection/required_status_checks"
