@@ -19,11 +19,8 @@ trap "rm -rf $TMPDIR" EXIT
 
 # 1️⃣ Fetch the approved AI-Spec from issue comments
 echo "📥 Fetching AI-Spec from issue #$ISSUE_ID..."
-AI_SPEC=$(gh issue view "$ISSUE_ID" --repo "$REPO" --json comments --jq '
-  .comments[] | 
-  select(.body | contains("### AI-Spec")) | 
-  .body
-' | tail -1)
+# Get all comments and find the last AI-Spec section
+AI_SPEC=$(gh issue view "$ISSUE_ID" --repo "$REPO" --comments | awk '/^### AI-Spec/{flag=1; ai_spec=""} flag{ai_spec=ai_spec"\n"$0} /^--$/{if(flag) {last_spec=ai_spec; flag=0}} END{print last_spec}')
 
 if [[ -z "$AI_SPEC" ]]; then
   echo "❌ No AI-Spec found in issue #$ISSUE_ID comments"
@@ -31,6 +28,12 @@ if [[ -z "$AI_SPEC" ]]; then
 fi
 
 echo "✅ Found AI-Spec"
+
+# Debug: Save AI-Spec if DEBUG env var is set
+if [[ -n "${DEBUG:-}" ]]; then
+  echo "$AI_SPEC" > "$TMPDIR/ai_spec_debug.txt"
+  echo "📝 Saved AI-Spec to $TMPDIR/ai_spec_debug.txt"
+fi
 
 # 2️⃣ Build Claude prompt files
 cat >"$TMPDIR/system.txt" <<'SYS'
@@ -144,7 +147,7 @@ $(git diff main --name-only | sed 's/^/- /')
 
 if gh pr create \
   --repo "$REPO" \
-  --title "feat: implement DB schema for issue #$ISSUE_ID" \
+  --title "feat: implement AI-Spec for issue #$ISSUE_ID" \
   --body "$PR_BODY" \
   --head "$BRANCH" \
   --base main \
